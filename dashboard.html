@@ -45,6 +45,7 @@ body{background:var(--black);color:var(--text);font-family:var(--font-ar);displa
 .btn-add{background:var(--gold);color:#000;border:none;border-radius:7px;padding:8px 18px;font-family:var(--font-ar);font-size:0.85rem;font-weight:700;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:6px}
 .btn-add:hover{background:var(--gold2)}
 .btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:8px 10px;cursor:pointer;transition:all .2s;font-size:0.9rem}
+.lang-btn.active{background:var(--card)!important;color:var(--gold)!important}
 .btn-icon:hover{border-color:var(--gold);color:var(--gold)}
 
 /* CONTENT */
@@ -122,6 +123,25 @@ canvas{max-height:160px}
 .btn-save{background:var(--gold);color:#000;border:none;padding:10px 24px;border-radius:7px;font-family:var(--font-ar);font-size:0.88rem;font-weight:700;cursor:pointer;transition:background .2s}
 .btn-save:hover{background:var(--gold2)}
 
+/* SCREENSHOT */
+.screenshot-wrap{margin-top:8px}
+.screenshot-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.screenshot-thumb{width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:border-color .2s}
+.screenshot-thumb:hover{border-color:var(--gold)}
+.upload-btn{background:var(--input);border:1px dashed var(--border);border-radius:7px;padding:8px 14px;color:var(--muted);font-size:0.8rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;font-family:var(--font-ar)}
+.upload-btn:hover{border-color:var(--gold);color:var(--gold)}
+/* CSV IMPORT */
+.csv-drop{background:var(--input);border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.csv-drop:hover,.csv-drop.drag{border-color:var(--gold);background:rgba(240,180,41,0.04)}
+.csv-drop-icon{font-size:2rem;margin-bottom:8px}
+.csv-drop-text{font-size:0.85rem;color:var(--muted)}
+/* NOTE CARD */
+.note-badge{background:rgba(78,158,255,0.1);border:1px solid rgba(78,158,255,0.2);color:var(--blue);font-size:0.68rem;padding:2px 6px;border-radius:4px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* IMG MODAL */
+.img-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;display:none;align-items:center;justify-content:center}
+.img-modal-bg.open{display:flex}
+.img-modal-bg img{max-width:90vw;max-height:90vh;border-radius:8px}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -154,17 +174,17 @@ canvas{max-height:160px}
   </div>
 
   <div class="nav-section">الرئيسية</div>
-  <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></button>
-  <button class="nav-item" onclick="showPage('journal',this)"><span class="nav-icon">📓</span><span>Journal</span></button>
-  <button class="nav-item" onclick="showPage('stats',this)"><span class="nav-icon">📈</span><span>إحصائيات</span></button>
+  <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span><span data-i="dashboard">Dashboard</span></button>
+  <button class="nav-item" onclick="showPage('journal',this)"><span class="nav-icon">📓</span><span data-i="journal">Journal</span></button>
+  <button class="nav-item" onclick="showPage('stats',this)"><span class="nav-icon">📈</span><span data-i="stats">الإحصائيات</span></button>
 
   <div class="nav-section">الأدوات</div>
   <button class="nav-item" onclick="showPage('backtesting',this)"><span class="nav-icon">⚡</span><span>Backtesting</span></button>
-  <button class="nav-item" onclick="showPage('signals',this)"><span class="nav-icon">🔔</span><span>Signals</span></button>
+  <button class="nav-item" onclick="showPage('signals',this)"><span class="nav-icon">🔔</span><span data-i="signals">Signals</span></button>
 
   <div class="nav-section">الحساب</div>
-  <button class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span><span>الإعدادات</span></button>
-  <button class="nav-item" onclick="location.href='auth.html'"><span class="nav-icon">🚪</span><span>خروج</span></button>
+  <button class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span><span data-i="settings">الإعدادات</span></button>
+  <button class="nav-item" onclick="location.href='auth.html'"><span class="nav-icon">🚪</span><span data-i="logout">خروج</span></button>
 
   <div class="sidebar-bottom">
     <button class="btn-upgrade" onclick="showPage('pricing',this)">⭐ ترقية للـ Pro</button>
@@ -176,9 +196,12 @@ canvas{max-height:160px}
   <header class="topbar">
     <span class="topbar-title" id="page-title">Dashboard</span>
     <div class="topbar-actions">
+
       <button class="btn-icon" title="بحث">🔍</button>
       <button class="btn-icon" title="تصدير">📤</button>
-      <button class="btn-add" onclick="openModal()">+ صفقة جديدة</button>
+      <button class="btn-icon" onclick="document.getElementById('csv-input').click()" title="استيراد CSV">📥 CSV</button>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="importCSV(this)">
+      <button class="btn-add" onclick="openModal()" data-i-btn="new_trade">+ صفقة جديدة</button>
     </div>
   </header>
 
@@ -243,7 +266,9 @@ canvas{max-height:160px}
               <option value="loss">LOSS فقط</option>
               <option value="be">Break Even</option>
             </select>
-            <button class="btn-add" onclick="openModal()">+ صفقة جديدة</button>
+            <button class="btn-icon" onclick="document.getElementById('csv-input').click()" title="استيراد CSV">📥 CSV</button>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="importCSV(this)">
+      <button class="btn-add" onclick="openModal()" data-i-btn="new_trade">+ صفقة جديدة</button>
           </div>
         </div>
         <div id="journal-wrap"></div>
@@ -311,6 +336,11 @@ canvas{max-height:160px}
   </div><!-- /content -->
 </div><!-- /main -->
 
+<!-- IMAGE VIEWER -->
+<div class="img-modal-bg" id="img-modal" onclick="this.classList.remove('open')">
+  <img id="img-modal-src" src="" alt="screenshot">
+</div>
+
 <!-- ADD TRADE MODAL -->
 <div class="modal-bg" id="modal">
   <div class="modal">
@@ -320,7 +350,7 @@ canvas{max-height:160px}
     </div>
     <div class="form-grid">
       <div class="form-group">
-        <label class="form-label">الزوج / الرمز</label>
+        <label class="form-label" data-i="pair">الزوج / الرمز</label>
         <input class="form-input" id="f-pair" placeholder="XAUUSD" list="pairs-list" dir="ltr">
         <datalist id="pairs-list">
           <option value="XAUUSD"><option value="EURUSD"><option value="GBPUSD">
@@ -329,34 +359,34 @@ canvas{max-height:160px}
         </datalist>
       </div>
       <div class="form-group">
-        <label class="form-label">الاتجاه</label>
+        <label class="form-label" data-i="direction">الاتجاه</label>
         <select class="form-select" id="f-dir">
           <option value="BUY">🟢 BUY</option>
           <option value="SELL">🔴 SELL</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">سعر الدخول</label>
+        <label class="form-label" data-i="entry">سعر الدخول</label>
         <input class="form-input" id="f-entry" type="number" step="any" placeholder="1980.50" dir="ltr" oninput="calcPnl()">
       </div>
       <div class="form-group">
-        <label class="form-label">سعر الخروج</label>
+        <label class="form-label" data-i="exit">سعر الخروج</label>
         <input class="form-input" id="f-exit" type="number" step="any" placeholder="1995.00" dir="ltr" oninput="calcPnl()">
       </div>
       <div class="form-group">
-        <label class="form-label">Stop Loss</label>
+        <label class="form-label" data-i="sl">Stop Loss</label>
         <input class="form-input" id="f-sl" type="number" step="any" placeholder="1970.00" dir="ltr" oninput="calcPnl()">
       </div>
       <div class="form-group">
-        <label class="form-label">Take Profit</label>
+        <label class="form-label" data-i="tp">Take Profit</label>
         <input class="form-input" id="f-tp" type="number" step="any" placeholder="2010.00" dir="ltr">
       </div>
       <div class="form-group">
-        <label class="form-label">الحجم (Lots)</label>
+        <label class="form-label" data-i="size">الحجم (Lots)</label>
         <input class="form-input" id="f-size" type="number" step="any" placeholder="0.10" dir="ltr" oninput="calcPnl()">
       </div>
       <div class="form-group">
-        <label class="form-label">النتيجة</label>
+        <label class="form-label" data-i="result">النتيجة</label>
         <select class="form-select" id="f-result">
           <option value="win">✅ WIN</option>
           <option value="loss">❌ LOSS</option>
@@ -364,15 +394,15 @@ canvas{max-height:160px}
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">P&L ($)</label>
+        <label class="form-label" data-i="pnl">P&L ($)</label>
         <input class="form-input" id="f-pnl" type="number" step="any" placeholder="0.00" dir="ltr">
       </div>
       <div class="form-group">
-        <label class="form-label">التاريخ</label>
+        <label class="form-label" data-i="date">التاريخ</label>
         <input class="form-input" id="f-date" type="date">
       </div>
       <div class="form-group">
-        <label class="form-label">الجلسة</label>
+        <label class="form-label" data-i="session">الجلسة</label>
         <select class="form-select" id="f-session">
           <option value="London">London</option>
           <option value="New York">New York</option>
@@ -381,12 +411,20 @@ canvas{max-height:160px}
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Setup</label>
+        <label class="form-label" data-i="setup">Setup</label>
         <input class="form-input" id="f-setup" placeholder="ICT, SMC, Breakout..." dir="ltr">
       </div>
       <div class="form-group full">
-        <label class="form-label">ملاحظات</label>
-        <textarea class="form-textarea" id="f-notes" placeholder="شنو تعلمت من هاد الصفقة؟"></textarea>
+        <label class="form-label" data-i="notes">ملاحظات / Lessons Learned</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="شنو تعلمت من هاد الصفقة؟" style="min-height:90px"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" data-i="screenshots">Screenshots الشارت</label>
+        <div class="screenshot-wrap">
+          <label class="upload-btn" for="f-screenshots">📸 ارفع صورة أو أكثر</label>
+          <input type="file" id="f-screenshots" accept="image/*" multiple style="display:none" onchange="previewScreenshots(this)">
+          <div class="screenshot-preview" id="screenshot-preview"></div>
+        </div>
       </div>
     </div>
     <!-- PNL PREVIEW -->
@@ -402,8 +440,99 @@ canvas{max-height:160px}
 </div>
 
 <script>
+// ── TRANSLATIONS ──
+const LANGS = {
+  ar:{
+    dir:'rtl',lang:'ar',
+    dashboard:'Dashboard', journal:'Journal', stats:'الإحصائيات',
+    backtesting:'Backtesting', signals:'Signals', settings:'الإعدادات',
+    new_trade:'+ صفقة جديدة', import_csv:'📥 CSV',
+    logout:'خروج', upgrade:'⭐ ترقية للـ Pro',
+    pair:'الزوج / الرمز', direction:'الاتجاه', entry:'سعر الدخول',
+    exit:'سعر الخروج', sl:'Stop Loss', tp:'Take Profit',
+    size:'الحجم (Lots)', result:'النتيجة', pnl:'P&L ($)',
+    date:'التاريخ', session:'الجلسة', setup:'Setup', notes:'ملاحظات',
+    save:'💾 حفظ الصفقة', cancel:'إلغاء',
+    new_trade_title:'+ صفقة جديدة', edit_trade_title:'✏️ تعديل الصفقة',
+    screenshots:'Screenshots الشارت', upload_img:'📸 ارفع صورة أو أكثر',
+    search:'🔍 بحث...', all_trades:'كل الصفقات', win_only:'WIN فقط',
+    loss_only:'LOSS فقط', breakeven:'Break Even',
+    total_pnl:'إجمالي P&L', win_rate:'Win Rate', profit_factor:'Profit Factor',
+    total_trades:'عدد الصفقات', today:'اليوم', monthly:'شهري',
+    no_trades:'لا توجد صفقات بعد', add_first:'+ أضف صفقتك الأولى',
+    coming_soon:'قريباً', notify_me:'🔔 نبّهني', pro_only:'حصري للمشتركين Pro',
+    save_settings:'حفظ الإعدادات', full_name:'الاسم الكامل',
+    currency:'العملة الافتراضية', account_size:'حجم الحساب',
+  },
+  en:{
+    dir:'ltr',lang:'en',
+    dashboard:'Dashboard', journal:'Journal', stats:'Statistics',
+    backtesting:'Backtesting', signals:'Signals', settings:'Settings',
+    new_trade:'+ New Trade', import_csv:'📥 CSV',
+    logout:'Logout', upgrade:'⭐ Upgrade to Pro',
+    pair:'Pair / Symbol', direction:'Direction', entry:'Entry Price',
+    exit:'Exit Price', sl:'Stop Loss', tp:'Take Profit',
+    size:'Size (Lots)', result:'Result', pnl:'P&L ($)',
+    date:'Date', session:'Session', setup:'Setup', notes:'Notes',
+    save:'💾 Save Trade', cancel:'Cancel',
+    new_trade_title:'+ New Trade', edit_trade_title:'✏️ Edit Trade',
+    screenshots:'Chart Screenshots', upload_img:'📸 Upload images',
+    search:'🔍 Search...', all_trades:'All Trades', win_only:'WIN only',
+    loss_only:'LOSS only', breakeven:'Break Even',
+    total_pnl:'Total P&L', win_rate:'Win Rate', profit_factor:'Profit Factor',
+    total_trades:'Total Trades', today:'Today', monthly:'Monthly',
+    no_trades:'No trades yet', add_first:'+ Add your first trade',
+    coming_soon:'Coming Soon', notify_me:'🔔 Notify Me', pro_only:'Pro subscribers only',
+    save_settings:'Save Settings', full_name:'Full Name',
+    currency:'Default Currency', account_size:'Account Size',
+  },
+  fr:{
+    dir:'rtl',lang:'ar',
+    dashboard:'Dashboard', journal:'Journal', stats:'Statistiques',
+    backtesting:'Backtesting', signals:'Signaux', settings:'Paramètres',
+    new_trade:'+ Nouveau Trade', import_csv:'📥 CSV',
+    logout:'Déconnexion', upgrade:'⭐ Passer à Pro',
+    pair:'Paire / Symbole', direction:'Direction', entry:'Prix d'entrée',
+    exit:'Prix de sortie', sl:'Stop Loss', tp:'Take Profit',
+    size:'Taille (Lots)', result:'Résultat', pnl:'P&L ($)',
+    date:'Date', session:'Session', setup:'Setup', notes:'Notes',
+    save:'💾 Enregistrer', cancel:'Annuler',
+    new_trade_title:'+ Nouveau Trade', edit_trade_title:'✏️ Modifier',
+    screenshots:'Captures d'écran', upload_img:'📸 Télécharger images',
+    search:'🔍 Rechercher...', all_trades:'Tous les trades', win_only:'WIN seulement',
+    loss_only:'LOSS seulement', breakeven:'Break Even',
+    total_pnl:'P&L Total', win_rate:'Win Rate', profit_factor:'Profit Factor',
+    total_trades:'Total Trades', today:'Aujourd'hui', monthly:'Mensuel',
+    no_trades:'Aucun trade', add_first:'+ Ajouter votre premier trade',
+    coming_soon:'Bientôt', notify_me:'🔔 Me notifier', pro_only:'Abonnés Pro uniquement',
+    save_settings:'Enregistrer', full_name:'Nom complet',
+    currency:'Devise par défaut', account_size:'Taille du compte',
+  }
+};
+
+let curLang = 'ar'; // Dashboard always Arabic
+
+function setLang(l){
+  curLang = l;
+  localStorage.setItem('tl_lang', l);
+  const t = LANGS[l];
+  // HTML dir
+  document.documentElement.setAttribute('dir', l==='en'?'ltr':'rtl');
+  document.documentElement.setAttribute('lang', l==='en'?'en':'ar');
+  // Update lang buttons
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang===l);
+  });
+  // Update all data-i elements
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    const key=el.getAttribute('data-i');
+    if(t[key]!==undefined) el.textContent=t[key];
+  });
+}
+
 // ── STATE ──
 let trades = JSON.parse(localStorage.getItem('tl_trades')||'[]');
+let pendingScreenshots = [];
 let editId = null;
 let charts = {};
 
@@ -414,6 +543,7 @@ const PAGES = {
 
 // ── INIT ──
 window.onload = () => {
+  setLang(curLang);
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
   renderAll();
   buildCharts();
@@ -497,6 +627,8 @@ function makeTable(list, limit){
       <td><span class="tag ${t.result}">${t.result?.toUpperCase()}</span></td>
       <td class="en" style="color:var(--muted);font-size:0.75rem">${t.setup||'—'}</td>
       <td>
+        ${t.screenshots&&t.screenshots.length?`<img src="${t.screenshots[0]}" class="screenshot-thumb" style="width:36px;height:28px;margin-left:4px" onclick="viewImg('${t.screenshots[0]}')" title="${t.screenshots.length} صورة">`:''}
+        ${t.notes?`<span class="note-badge" title="${t.notes}">📝 ${t.notes.slice(0,15)}...</span>`:''}
         <button class="action-btn" onclick="editTrade('${t.id}')" title="تعديل">✏️</button>
         <button class="action-btn del" onclick="deleteTrade('${t.id}')" title="حذف">🗑</button>
       </td>
@@ -534,6 +666,8 @@ function openModal(id){
     if(t){
       ['pair','dir','entry','exit','sl','tp','size','result','pnl','date','session','setup','notes']
         .forEach(k=>{ const el=document.getElementById('f-'+k); if(el) el.value=t[k]||''; });
+      pendingScreenshots = [...(t.screenshots||[])];
+      renderScreenshotPreviews();
     }
   } else {
     document.querySelectorAll('#modal .form-input, #modal .form-textarea').forEach(el=>{ if(el.id!=='f-date')el.value=''; });
@@ -545,7 +679,11 @@ function openModal(id){
   document.getElementById('pnl-preview').style.display='none';
   document.getElementById('modal').classList.add('open');
 }
-function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  pendingScreenshots=[];
+  renderScreenshotPreviews();
+}
 document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
 
 function editTrade(id){ openModal(id); }
@@ -571,6 +709,7 @@ function saveTrade(){
     session: document.getElementById('f-session').value,
     setup: document.getElementById('f-setup').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
+    screenshots: [...pendingScreenshots],
   };
   if(!t.pair||t.pair==='—') return alert('أدخل الزوج');
   if(editId) trades = trades.map(x=>x.id===editId?t:x);
@@ -693,6 +832,79 @@ function buildStatsCharts(){
       scales:{x:{ticks:{color:'#6b7a8d',font:{size:9}},grid:{color:'#1e2a38'}},
               y:{ticks:{color:'#6b7a8d',font:{size:9},callback:v=>'$'+v},grid:{color:'#1e2a38'}}}}
   });
+}
+
+// ══════════════════════════════════
+// CSV IMPORT
+// ══════════════════════════════════
+function importCSV(inp){
+  const file = inp.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.trim().split('\n');
+    const headers = lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/['"]/g,''));
+    let imported = 0;
+    lines.slice(1).forEach(line => {
+      const vals = line.split(',').map(v=>v.trim().replace(/['"]/g,''));
+      const row = {};
+      headers.forEach((h,i)=>row[h]=vals[i]||'');
+      // Map common CSV headers
+      const pair   = row.pair||row.symbol||row.instrument||'';
+      const dir    = (row.direction||row.side||row.type||'BUY').toUpperCase();
+      const entry  = parseFloat(row.entry||row['entry price']||row.open||0);
+      const exit   = parseFloat(row.exit||row['exit price']||row.close||0);
+      const pnl    = parseFloat(row.pnl||row['p&l']||row.profit||row.result||0);
+      const date   = row.date||row.time||new Date().toISOString().split('T')[0];
+      const notes  = row.notes||row.note||row.comment||'';
+      const result = pnl>0?'win':pnl<0?'loss':'be';
+      if(!pair) return;
+      trades.unshift({
+        id:uid(), pair:pair.toUpperCase(), dir:dir.includes('BUY')||dir.includes('LONG')?'BUY':'SELL',
+        entry, exit, sl:0, tp:0, size:parseFloat(row.size||row.lots||row.qty||0.1),
+        result, pnl:+pnl.toFixed(2),
+        date: date.slice(0,10),
+        session: row.session||'Other',
+        setup: row.setup||row.strategy||'',
+        notes, screenshots:[]
+      });
+      imported++;
+    });
+    save(); renderAll(); buildCharts();
+    alert('✅ تم استيراد '+imported+' صفقة بنجاح!');
+    inp.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════
+// SCREENSHOTS
+// ══════════════════════════════════
+let pendingScreenshots = []; // base64 array
+
+function previewScreenshots(inp){
+  const files = Array.from(inp.files);
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingScreenshots.push(e.target.result);
+      renderScreenshotPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderScreenshotPreviews(){
+  const wrap = document.getElementById('screenshot-preview');
+  if(!wrap) return;
+  wrap.innerHTML = pendingScreenshots.map((src,i)=>
+    `<img src="${src}" class="screenshot-thumb" onclick="viewImg('${src}')" title="اضغط للعرض">
+     <span onclick="pendingScreenshots.splice(${i},1);renderScreenshotPreviews()" style="cursor:pointer;color:var(--red);font-size:0.7rem;align-self:flex-start">✕</span>`
+  ).join('');
+}
+
+function viewImg(src){
+  document.getElementById('img-modal-src').src = src;
+  document.getElementById('img-modal').classList.add('open');
 }
 
 function saveSettings(){
