@@ -22,7 +22,7 @@ body{background:var(--black);color:var(--text);font-family:var(--font-ar);displa
 .bg-glow{position:fixed;top:-20%;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(240,180,41,0.06) 0%,transparent 70%);pointer-events:none}
 
 /* NAV */
-nav{position:relative;z-index:10;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(240,180,41,0.08)}
+nav{position:relative;z-index:10;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(240,180,41,0.08);background:var(--dark)}
 .logo{font-family:var(--font-en);font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none}
 .logo span{color:var(--gold)}
 .nav-back{color:var(--muted);font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s}
@@ -139,7 +139,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 
 <div class="bg-glow"></div>
 
 <nav>
-  <a href="trading-landing.html" class="logo">Trade<span>Log</span> DZ</a>
+  <a href="trading-landing.html" class="logo">Trade<span style="color:var(--gold)">Log</span> DZ</a>
   <a href="trading-landing.html" class="nav-back">← رجوع للرئيسية</a>
 </nav>
 
@@ -321,46 +321,18 @@ create trigger on_auth_user_created<br>
 </main>
 
 <script>
-// ── CONFIG ── بدّل هاد القيم بقيمك من Supabase
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-
-const configured = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
-let supabase = null;
-
-if(configured){
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  initAuth();
-} else {
-  // DEMO MODE — يخدم بدون Supabase باش تشوف الواجهة
-  console.log('Demo mode — configure Supabase to enable real auth');
-}
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://auqldnclhwyolwhtssph.supabase.co';
+const SUPABASE_KEY  = 'sb_publishable_D5svtHjv7cXJpPCEurB_8A_e3WNRsJy';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function initAuth(){
-  const {data:{session}} = await supabase.auth.getSession();
+  const { data:{ session } } = await sb.auth.getSession();
   if(session) showDashboard(session.user);
-  supabase.auth.onAuthStateChange((_,session)=>{
+  sb.auth.onAuthStateChange((_,session)=>{
     if(session) showDashboard(session.user);
     else showAuth();
   });
-}
-
-// ── TAB SWITCH ──
-function switchTab(tab){
-  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
-  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
-  document.getElementById('forgot-form').style.display = 'none';
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>{
-    t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register'));
-  });
-  clearMsgs();
-}
-
-function showForgot(e){
-  e.preventDefault();
-  document.getElementById('login-form').style.display='none';
-  document.getElementById('forgot-form').style.display='block';
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
 }
 
 // ── LOGIN ──
@@ -368,11 +340,15 @@ async function handleLogin(){
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   if(!email||!password) return showMsg('login-msg','error','أدخل البريد الإلكتروني وكلمة المرور');
-  if(!configured) return demoLogin(email);
   setBtnLoading('login-btn',true);
-  const {error} = await supabase.auth.signInWithPassword({email,password});
+  const { error } = await sb.auth.signInWithPassword({email, password});
   setBtnLoading('login-btn',false);
-  if(error) showMsg('login-msg','error','بيانات الدخول غير صحيحة. تحقق من البريد وكلمة المرور.');
+  if(error){
+    if(error.message.includes('Invalid')) return showMsg('login-msg','error','البريد أو كلمة المرور غلط');
+    return showMsg('login-msg','error',error.message);
+  }
+  showMsg('login-msg','success','✓ مرحباً! جاري التحويل...');
+  setTimeout(()=> location.href='dashboard.html', 600);
 }
 
 // ── REGISTER ──
@@ -382,46 +358,44 @@ async function handleRegister(){
   const password = document.getElementById('reg-password').value;
   const terms = document.getElementById('terms-check').checked;
   if(!name) return showMsg('register-msg','error','أدخل اسمك الكامل');
-  if(!email) return showMsg('register-msg','error','أدخل بريدك الإلكتروني');
-  if(password.length<8) return showMsg('register-msg','error','كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+  if(!email||!email.includes('@')) return showMsg('register-msg','error','أدخل بريد إلكتروني صحيح');
+  if(password.length<6) return showMsg('register-msg','error','كلمة المرور يجب 6 أحرف على الأقل');
   if(!terms) return showMsg('register-msg','error','يجب الموافقة على شروط الاستخدام');
-  if(!configured) return demoRegister(name,email);
   setBtnLoading('register-btn',true);
-  const {error} = await supabase.auth.signUp({
+  const { error } = await sb.auth.signUp({
     email, password,
-    options:{data:{full_name:name}}
+    options:{ data:{ full_name: name } }
   });
   setBtnLoading('register-btn',false);
-  if(error) showMsg('register-msg','error',error.message);
-  else showMsg('register-msg','success','✓ تم إنشاء حسابك! تحقق من بريدك الإلكتروني لتفعيل الحساب.');
+  if(error) return showMsg('register-msg','error',error.message);
+  showMsg('register-msg','success','✓ تم التسجيل! تحقق من بريدك الإلكتروني لتفعيل الحساب.');
 }
 
-// ── GOOGLE ──
+// ── GOOGLE (demo) ──
 async function handleGoogle(){
-  if(!configured) return showMsg('login-msg','info','اربط Supabase أولاً لتفعيل تسجيل الدخول بـ Google');
-  await supabase.auth.signInWithOAuth({
+  const { error } = await sb.auth.signInWithOAuth({
     provider:'google',
-    options:{redirectTo:window.location.href}
+    options:{ redirectTo: window.location.origin+'/dashboard.html' }
   });
+  if(error) showMsg('login-msg','error',error.message);
 }
 
-// ── FORGOT PASSWORD ──
+// ── FORGOT ──
 async function handleForgot(){
   const email = document.getElementById('forgot-email').value.trim();
   if(!email) return showMsg('forgot-msg','error','أدخل بريدك الإلكتروني');
-  if(!configured) return showMsg('forgot-msg','success','✓ (Demo) سيتم إرسال رابط الاسترداد لبريدك.');
   setBtnLoading('forgot-btn',true);
-  const {error} = await supabase.auth.resetPasswordForEmail(email,{
-    redirectTo:window.location.origin+'/reset-password.html'
+  const { error } = await sb.auth.resetPasswordForEmail(email,{
+    redirectTo: window.location.origin+'/auth.html'
   });
   setBtnLoading('forgot-btn',false);
-  if(error) showMsg('forgot-msg','error',error.message);
-  else showMsg('forgot-msg','success','✓ تم إرسال رابط إعادة التعيين لبريدك الإلكتروني.');
+  if(error) return showMsg('forgot-msg','error',error.message);
+  showMsg('forgot-msg','success','✓ تم إرسال رابط إعادة التعيين لبريدك!');
 }
 
 // ── LOGOUT ──
 async function handleLogout(){
-  if(configured) await supabase.auth.signOut();
+  await sb.auth.signOut();
   showAuth();
 }
 
@@ -429,91 +403,24 @@ async function handleLogout(){
 async function showDashboard(user){
   document.getElementById('auth-section').style.display='none';
   document.getElementById('dashboard-section').style.display='block';
-  const name = user.user_metadata?.full_name || user.email.split('@')[0];
+  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Trader';
   document.getElementById('dash-welcome').textContent = 'مرحباً، '+name+' 👋';
   document.getElementById('dash-email').textContent = user.email;
-
-  // Fetch profile for trial info
-  let trialEnd = null;
-  if(configured){
-    const {data} = await supabase.from('profiles').select('trial_ends_at,plan').eq('id',user.id).single();
-    if(data) trialEnd = data.trial_ends_at;
-  } else {
-    trialEnd = new Date(Date.now()+7*24*60*60*1000).toISOString();
-  }
-
-  if(trialEnd){
-    const end = new Date(trialEnd);
-    const now = new Date();
-    const daysLeft = Math.max(0,Math.ceil((end-now)/(1000*60*60*24)));
-    const pct = Math.min(100,Math.round((daysLeft/7)*100));
-    document.getElementById('trial-badge').textContent = daysLeft+' أيام متبقية';
-    document.getElementById('trial-bar').style.width = pct+'%';
-    document.getElementById('trial-bar').style.background = daysLeft<=2?'var(--red)':daysLeft<=4?'var(--gold)':'var(--green)';
-    document.getElementById('trial-text').textContent = 'التجربة تنتهي في: '+end.toLocaleDateString('ar-DZ');
-  }
-
-  document.getElementById('setup-guide').style.display = configured?'none':'block';
+  // Trial: based on account creation date
+  const created = new Date(user.created_at||Date.now());
+  const trialEnd = new Date(created.getTime()+7*24*60*60*1000);
+  const daysLeft = Math.max(0,Math.ceil((trialEnd-new Date())/(1000*60*60*24)));
+  const pct = Math.min(100,Math.round((daysLeft/7)*100));
+  document.getElementById('trial-badge').textContent = daysLeft+' أيام متبقية';
+  document.getElementById('trial-bar').style.width = pct+'%';
+  document.getElementById('trial-bar').style.background = daysLeft<=2?'var(--red)':daysLeft<=4?'var(--gold)':'var(--green)';
+  document.getElementById('trial-text').textContent = 'التجربة تنتهي في: '+trialEnd.toLocaleDateString('ar-DZ');
+  document.getElementById('setup-guide').style.display='none';
 }
 
 function showAuth(){
   document.getElementById('auth-section').style.display='block';
   document.getElementById('dashboard-section').style.display='none';
-}
-
-// ── DEMO MODE ──
-function demoLogin(email){
-  showDashboard({email,user_metadata:{full_name:email.split('@')[0]}});
-}
-function demoRegister(name,email){
-  showMsg('register-msg','success','✓ (Demo) تم إنشاء الحساب! اربط Supabase للتفعيل الحقيقي.');
-  setTimeout(()=>showDashboard({email,user_metadata:{full_name:name}}),1500);
-}
-
-// ── UTILS ──
-function showMsg(id,type,text){
-  const el=document.getElementById(id);
-  el.className='msg '+type;
-  el.textContent=text;
-  el.style.display='block';
-}
-function clearMsgs(){
-  document.querySelectorAll('.msg').forEach(m=>{ m.style.display='none'; m.className='msg'; });
-}
-function setBtnLoading(id,loading){
-  const btn=document.getElementById(id);
-  btn.disabled=loading;
-  if(loading){ btn.innerHTML='<div class="spinner"></div>'; }
-  else{
-    const texts={
-      'login-btn':'<span>دخول</span>',
-      'register-btn':'<span>إنشاء الحساب — ابدأ 7 أيام مجاناً</span>',
-      'forgot-btn':'<span>إرسال رابط الاسترداد</span>'
-    };
-    btn.innerHTML=texts[id]||'<span>تأكيد</span>';
-  }
-}
-function togglePw(id,btn){
-  const inp=document.getElementById(id);
-  inp.type=inp.type==='password'?'text':'password';
-  btn.textContent=inp.type==='password'?'👁':'🙈';
-}
-function checkStrength(val){
-  const wrap=document.getElementById('strength-wrap');
-  if(!val){wrap.style.display='none';return;}
-  wrap.style.display='block';
-  let score=0;
-  if(val.length>=8)score++;
-  if(/[A-Z]/.test(val))score++;
-  if(/[0-9]/.test(val))score++;
-  if(/[^A-Za-z0-9]/.test(val))score++;
-  const cls=['weak','weak','fair','strong','strong'][score];
-  const labels=['','ضعيفة','ضعيفة','متوسطة','قوية'][score];
-  for(let i=1;i<=4;i++){
-    const bar=document.getElementById('sb'+i);
-    bar.className='strength-bar'+(i<=score?' active '+cls:'');
-  }
-  document.getElementById('strength-label').textContent='قوة كلمة المرور: '+labels;
 }
 
 // Enter key support
